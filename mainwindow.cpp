@@ -33,6 +33,7 @@ void MainWindow::setConnection()
     connect(ui->list_files,SIGNAL(itemSelectionChanged()),this,SLOT(currentSelectFileNameChanged()));
     connect(ui->spinBox_frameCount,SIGNAL(valueChanged(int)),this,SLOT(setNumberOfCompositionImg(int)));
     connect(&calc_thread,SIGNAL(imgToGUI(QImage)), this, SLOT(update_image(QImage)));
+    connect(this,&MainWindow::sg_dispImg,this,&MainWindow::sl_dispImg);
 }
 
 void MainWindow::update_image(QImage image)
@@ -42,6 +43,12 @@ void MainWindow::update_image(QImage image)
     QImage img(fileList_queue.last());
     ui->label_orgDisp->setPixmap(QPixmap::fromImage(img));
     ui->label_destDisp->setPixmap(QPixmap::fromImage(image));
+}
+
+void MainWindow::sl_dispImg(QImage& imgOrg, QImage& imgDest)
+{
+    ui->label_orgDisp->setPixmap(QPixmap::fromImage(imgOrg));
+    ui->label_destDisp->setPixmap(QPixmap::fromImage(imgDest));
 }
 
 void MainWindow::on_btnOpenFiles_clicked()
@@ -122,6 +129,7 @@ void MainWindow::on_btnStartProcess_clicked()
 
     int nCount = ui->list_files->count();
 
+    fileList_queue.clear();
     for(int i=0;i<nCount;i++)
     {
         // 1-获取所有图像文件名
@@ -233,9 +241,10 @@ void MainWindow::on_btnStartProcess_clicked()
 #endif
 
         QImage img(fileList_queue.back());
-        ui->label_orgDisp->setPixmap(QPixmap::fromImage(img));
-        ui->label_destDisp->setPixmap(QPixmap::fromImage(imgDest));
-        mySleep(2000);
+
+        emit sg_dispImg(img,imgDest);
+        int nMs = ui->spinBox_delayTime->value();
+        mySleep(nMs);
 
         destroy_file_list(file_list);
         file_list = nullptr;

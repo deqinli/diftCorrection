@@ -30,8 +30,12 @@ public:
 
     void screen2conf();
 
+signals:
+    void sg_dispImg(QImage& imgOrg, QImage& imgDest);
+
 private slots:
     void update_image(QImage image);
+    void sl_dispImg(QImage& imgOrg, QImage& imgDest);
 
 private:
     Ui::MainWindow *ui;
