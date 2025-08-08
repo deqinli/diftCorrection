@@ -1,2 +1,2 @@
-# metadata_exiv2
-使用exiv2库对图像元数据信息进行读写操作，exif、xmp、iptc。
+# driftCorrection
+对帧间存在漂移图像序列进行校正并融合，最终得到振动较小的增强型图像。
