@@ -16,6 +16,8 @@
 #include "accord.h"
 #include <string>
 #include <QtMath>
+#include <chrono>
+#include <QDebug>
 void (*status_callback)(int i, char *message) = print_status;
 
 char find_displacement(t_im_struct *image1, t_im_struct *image2, double filter_radius, double *shx, double *shy){/*{{{*/
@@ -60,15 +62,26 @@ char add_with_correction(t_im_struct *image1, t_im_struct *image2, char destruct
         h2 = image2;
 
     double shx, shy;
+    auto start_find_displacement = std::chrono::high_resolution_clock::now();
     err = find_displacement(&helper1, h2, 30, &shx, &shy); // fixed radius.
+    auto end_find_displacement = std::chrono::high_resolution_clock::now();
+    auto duration_find_displacement = std::chrono::duration_cast<std::chrono::milliseconds>(end_find_displacement - start_find_displacement);
+    qDebug()<<"ldq "<<__FUNCTION__<<" "<<__LINE__<<"find_displacement images cost time: "<<duration_find_displacement.count()<<"ms";
     if (err) return err;
 
     if (shx_out) *shx_out = shx;
     if (shy_out) *shy_out = shy;
 
     shift_image(h2, shx, shy);
+    auto end_shift_image = std::chrono::high_resolution_clock::now();
+    auto duration_shift_image = std::chrono::duration_cast<std::chrono::milliseconds>(end_shift_image - end_find_displacement);
+    qDebug()<<"ldq "<<__FUNCTION__<<" "<<__LINE__<<"shift_image cost time: "<<duration_shift_image.count()<<"ms";
+
 
     add_images(image1, h2);
+    auto end_add = std::chrono::high_resolution_clock::now();
+    auto duration_add_images = std::chrono::duration_cast<std::chrono::milliseconds>(end_add - end_shift_image);
+    qDebug()<<"ldq "<<__FUNCTION__<<" "<<__LINE__<<"add_images cost time: "<<duration_add_images.count()<<"ms";
 
     destroy_image(&helper1);
     if (destructive == IM_NON_DESTRUCTIVE) destroy_image(&helper2);

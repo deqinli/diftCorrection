@@ -8,6 +8,7 @@
 #include <QTime>
 #include <QCoreApplication>
 #include <QImage>
+#include <chrono>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -110,28 +111,13 @@ void MainWindow::currentSelectFileNameChanged()
 
 void MainWindow::on_btnStartProcess_clicked()
 {
-#if 0
-    int nCount = ui->list_files->count();
-    qDebug() << "ldq "<<__FUNCTION__<<" "<<__LINE__ << " ui->list_files.count()="<<nCount;
-    for(int i=0;i<nCount;i++)
-    {
-        qstrCurrentFileName = ui->list_files->item(i)->text();
-        QString absFileName = qstrFilesDir + qstrCurrentFileName;
-        qImg.load(absFileName);
-        qDebug() << "ldq "<<__FUNCTION__<<" "<<__LINE__ << "::absFileName="<<absFileName;
-        ui->label_orgDisp->setPixmap(QPixmap::fromImage(qImg));
-        ui->label_destDisp->setPixmap(QPixmap::fromImage(qImg));
-
-        mySleep(2000);
-    }
-#endif
-
 
     int nCount = ui->list_files->count();
 
     fileList_queue.clear();
     for(int i=0;i<nCount;i++)
     {
+        //qDebug()<<"ldq "<< __FUNCTION__<<" "<<__LINE__<<"start time";
         // 1-获取所有图像文件名
         QString FileName = ui->list_files->item(i)->text();
         QString absFileName = qstrFilesDir + FileName;
@@ -194,18 +180,27 @@ void MainWindow::on_btnStartProcess_clicked()
         {
             return;
         }
+        auto start_loadImg = std::chrono::high_resolution_clock::now();
+
         while(load_image(&h3->image, h3->filename , IM_NOT_INITIALIZED))
         {
             h3 = h3->next;
         }
 
-        //test wether the image data is empty or not
+        auto end_loadImg = std::chrono::high_resolution_clock::now();
+        auto duration_loadImg = std::chrono::duration_cast<std::chrono::milliseconds>(end_loadImg - start_loadImg);
+        qDebug()<<"ldq "<<__FUNCTION__<<" "<<__LINE__<<"load images cost time: "<<duration_loadImg.count() << "ms";
 
+
+        //test wether the image data is empty or not
 
         t_im_struct final;
 
         copy_image(&final, &h3->image, IM_NOT_INITIALIZED);
         initialize_weight_counting(&final);
+
+        auto start_deal = std::chrono::high_resolution_clock::now();
+
         while(h3)
         {
             char err = ACC_ERR_NO_ERROR; // 程序执行状态，错误类型
@@ -237,7 +232,11 @@ void MainWindow::on_btnStartProcess_clicked()
         image_buffer = processImg.image_to_32bit(&final);
         QImage imgDest(image_buffer, final.sizex, final.sizey, QImage::Format_RGB32);
 
+        auto end_deal = std::chrono::high_resolution_clock::now();
 
+        // 计算时间差（毫秒）
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_deal - start_deal);
+        qDebug()<<"ldq "<<__FUNCTION__<<" "<<__LINE__<<"deal images cost time: "<<duration.count()<<"ms";
 #endif
 
         QImage img(fileList_queue.back());
