@@ -16,11 +16,13 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setConnection();
+
     ui->lineEdit_filePath->setReadOnly(true);
     ui->label_orgDisp->setScaledContents(true);
     ui->label_destDisp->setScaledContents(true);
     qstrFilesDir = "./";
+    nNumOfCompositionImg = ui->spinBox_frameCount->value();
+    setConnection();
 }
 
 MainWindow::~MainWindow()
@@ -28,6 +30,11 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    calThread.stop();
+    calThread.wait();
+}
 
 void MainWindow::setConnection()
 {
@@ -35,19 +42,21 @@ void MainWindow::setConnection()
     connect(ui->spinBox_frameCount,SIGNAL(valueChanged(int)),this,SLOT(setNumberOfCompositionImg(int)));
     connect(&calc_thread,SIGNAL(imgToGUI(QImage)), this, SLOT(update_image(QImage)));
     connect(this,&MainWindow::sg_dispImg,this,&MainWindow::sl_dispImg);
+    connect(&calThread,SIGNAL(sg_resultImgToUIDisplay(QImage,QImage)),this,SLOT(sl_dispImg(QImage,QImage)));
 }
 
 void MainWindow::update_image(QImage image)
 {
-    qDebug()<<"ldq "<<__FUNCTION__<<" "<<__LINE__<<"imageSize=("<<image.width()<<","<<image.height()<<")";
-    qDebug()<<"ldq "<<__FUNCTION__<<" "<<__LINE__<<"fileList_queue.last()=("<<fileList_queue.last();
+    //qDebug()<<"ldq "<<__FILE__<<":"<<__FUNCTION__<<" "<<__LINE__<<"imageSize=("<<image.width()<<","<<image.height()<<")";
+    //qDebug()<<"ldq "<<__FILE__<<":"<<__FUNCTION__<<" "<<__LINE__<<"fileList_queue.last()=("<<fileList_queue.last();
     QImage img(fileList_queue.last());
     ui->label_orgDisp->setPixmap(QPixmap::fromImage(img));
     ui->label_destDisp->setPixmap(QPixmap::fromImage(image));
 }
 
-void MainWindow::sl_dispImg(QImage& imgOrg, QImage& imgDest)
+void MainWindow::sl_dispImg(QImage imgOrg, QImage imgDest)
 {
+    //qDebug()<<"ldq "<<__FILE__<<":"<<__FUNCTION__<<"::"<<__LINE__<<"imgOrg.width()="<<imgOrg.width()<<",imgDest.width()="<<imgDest.width();
     ui->label_orgDisp->setPixmap(QPixmap::fromImage(imgOrg));
     ui->label_destDisp->setPixmap(QPixmap::fromImage(imgDest));
 }
@@ -117,7 +126,6 @@ void MainWindow::on_btnStartProcess_clicked()
     fileList_queue.clear();
     for(int i=0;i<nCount;i++)
     {
-        //qDebug()<<"ldq "<< __FUNCTION__<<" "<<__LINE__<<"start time";
         // 1-获取所有图像文件名
         QString FileName = ui->list_files->item(i)->text();
         QString absFileName = qstrFilesDir + FileName;
@@ -146,9 +154,9 @@ void MainWindow::on_btnStartProcess_clicked()
         for(int i=0; i<fileList_queue.size();i++)
         {
             QString qstrFilename = fileList_queue.at(i);
-            qDebug()<<"ldq "<<__FUNCTION__<<" "<<__LINE__<<qstrFilename;
+            qDebug()<<"ldq "<<__FILE__<<":"<<__FUNCTION__<<" "<<__LINE__<<qstrFilename;
         }
-        qDebug()<<"ldq "<<__FUNCTION__<<" "<<__LINE__<<"-----------------------------------------------";
+        qDebug()<<"ldq "<<__FILE__<<":"<<__FUNCTION__<<" "<<__LINE__<<"-----------------------------------------------";
 
 #if 1
         // 3-将容器中所有图像进行漂移校正和融合
@@ -189,7 +197,7 @@ void MainWindow::on_btnStartProcess_clicked()
 
         auto end_loadImg = std::chrono::high_resolution_clock::now();
         auto duration_loadImg = std::chrono::duration_cast<std::chrono::milliseconds>(end_loadImg - start_loadImg);
-        qDebug()<<"ldq "<<__FUNCTION__<<" "<<__LINE__<<"load images cost time: "<<duration_loadImg.count() << "ms";
+        qDebug()<<"ldq "<<__FILE__<<":"<<__FUNCTION__<<" "<<__LINE__<<"load images cost time: "<<duration_loadImg.count() << "ms";
 
 
         //test wether the image data is empty or not
@@ -236,7 +244,7 @@ void MainWindow::on_btnStartProcess_clicked()
 
         // 计算时间差（毫秒）
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_deal - start_deal);
-        qDebug()<<"ldq "<<__FUNCTION__<<" "<<__LINE__<<"deal images cost time: "<<duration.count()<<"ms";
+        qDebug()<<"ldq "<<__FILE__<<":"<<__FUNCTION__<<" "<<__LINE__<<"deal images cost time: "<<duration.count()<<"ms";
 #endif
 
         QImage img(fileList_queue.back());
@@ -250,6 +258,34 @@ void MainWindow::on_btnStartProcess_clicked()
 
     }
 
+}
+
+void MainWindow::on_btnStartProcessMultiThread_clicked()
+{
+
+    if(calThread.isStopped())
+    {
+        calThread.restart();
+    }
+
+    int nCount = ui->list_files->count();
+
+    fileNameList_abs.clear();
+    for(int i=0;i<nCount;i++)
+    {
+        // 1-获取所有图像文件名
+        fileNameList_abs.append(ui->list_files->item(i)->text());
+    }
+
+    calThread.setTask(fileNameList_abs,qstrFilesDir,nNumOfCompositionImg);
+    calThread.start();
+
+
+}
+
+void MainWindow::on_btnStop_clicked()
+{
+    calThread.stop();
 }
 
 void MainWindow::mySleep(int ms)

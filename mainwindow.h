@@ -8,6 +8,8 @@
 #include "process.h"
 #include <QQueue>
 #include "myprocess.h"
+#include "calcuthread.h"
+#include <QCloseEvent>
 
 
 QT_BEGIN_NAMESPACE
@@ -31,11 +33,11 @@ public:
     void screen2conf();
 
 signals:
-    void sg_dispImg(QImage& imgOrg, QImage& imgDest);
+    void sg_dispImg(QImage imgOrg, QImage imgDest);
 
 private slots:
     void update_image(QImage image);
-    void sl_dispImg(QImage& imgOrg, QImage& imgDest);
+    void sl_dispImg(QImage imgOrg, QImage imgDest);
 
 private:
     Ui::MainWindow *ui;
@@ -57,12 +59,19 @@ private:
 
     myProcess processImg;
 
+    CalcuThread calThread;
+
 
 private slots:
     void on_btnOpenFiles_clicked();
     void currentSelectFileNameChanged();
     void on_btnStartProcess_clicked();
+    void on_btnStartProcessMultiThread_clicked();
+    void on_btnStop_clicked();
     void setNumberOfCompositionImg(int n);
+
+protected:
+    void closeEvent(QCloseEvent* event)override;
 
 };
 #endif // MAINWINDOW_H

@@ -11,7 +11,7 @@ void qCalcThread::run(){
     while(file_list->filename)
     {
         std::string strFilename = file_list->filename;
-        qDebug() <<"ldq "<<__FUNCTION__<<" "<<__LINE__<<"file_list->filename = "<<QString::fromStdString(strFilename);
+        qDebug() <<"ldq "<<__FILE__<<":"<<__FUNCTION__<<" "<<__LINE__<<"file_list->filename = "<<QString::fromStdString(strFilename);
     }
     process.process_image(file_list, img);
     emit imgToGUI(img);

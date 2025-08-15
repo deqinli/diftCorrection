@@ -25,6 +25,7 @@ DESTDIR = $$PWD/bin
 
 SOURCES += \
     accord.cpp \
+    calcuthread.cpp \
     imageutils.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -33,6 +34,7 @@ SOURCES += \
 
 HEADERS += \
     accord.h \
+    calcuthread.h \
     imageutils.h \
     mainwindow.h \
     myprocess.h \
