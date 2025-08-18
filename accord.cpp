@@ -112,7 +112,10 @@ void print_status(int i, char *message){/*{{{*/
 
 void initialize_image(t_im_struct *image, ACC_DIM_TYPE sizex, ACC_DIM_TYPE sizey){/*{{{*/
     memset(image, 0, sizeof(t_im_struct)); // zeroes everything
-    image->buffer = (ACC_IM_TYPE *) malloc(sizex * sizey * sizeof(ACC_IM_TYPE));
+    if(!image->buffer)
+    {
+        image->buffer = (ACC_IM_TYPE *) malloc(sizex * sizey * sizeof(ACC_IM_TYPE));
+    }
     assert(image->buffer); // Fatal error - malloc failed
     image->sizex = sizex;
     image->sizey = sizey;

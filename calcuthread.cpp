@@ -130,11 +130,12 @@ void CalcuThread::run()
         t_im_struct final;
 
         copy_image(&final, &h->image, IM_NOT_INITIALIZED);
+        destroy_image(&h->image);
         initialize_weight_counting(&final);
 
         auto start_deal = std::chrono::high_resolution_clock::now();
 
-        while(h&&(!isStopped()))
+        while(h&&(!isStopped())) // this while loop has no memory leak. It has been tested.
         {
             char err = ACC_ERR_NO_ERROR; // 程序执行状态，错误类型
             char res = load_image(&h->image, h->filename , IM_NOT_INITIALIZED);
@@ -185,9 +186,7 @@ void CalcuThread::run()
         destroy_file_list(im_list_queue);
 
         ++nRecord;
-
     }
-
 }
 
 void CalcuThread::stop()

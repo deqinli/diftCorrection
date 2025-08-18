@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
     qstrFilesDir = "./";
     nNumOfCompositionImg = ui->spinBox_frameCount->value();
     setConnection();
+    getImagePathDir();
 }
 
 MainWindow::~MainWindow()
@@ -73,6 +74,7 @@ void MainWindow::on_btnOpenFiles_clicked()
         qImg.load(qstrFileList[0]);
         ui->label_orgDisp->setPixmap(QPixmap::fromImage(qImg));
         ui->label_destDisp->setPixmap(QPixmap::fromImage(qImg));
+        setImagePathDir();
     }
     for(int i=0;i<qstrFileList.size();i++)
     {
@@ -301,4 +303,17 @@ void MainWindow::setNumberOfCompositionImg(int n)
 {
     nNumOfCompositionImg = n;
     qDebug() << __FUNCTION__<<"::"<<__LINE__<<"::nNumOfCompositionImg="<<nNumOfCompositionImg;
+}
+
+void MainWindow::setImagePathDir()
+{
+    QSettings config(CONFIG_INI,QSettings::IniFormat);
+    config.setValue("PARAM/ImageDir",qstrFilesDir);
+}
+
+void MainWindow::getImagePathDir()
+{
+    QSettings config(CONFIG_INI,QSettings::IniFormat);
+    qstrFilesDir = config.value("PARAM/ImageDir","").toString();
+    ui->lineEdit_filePath->setText(qstrFilesDir);
 }

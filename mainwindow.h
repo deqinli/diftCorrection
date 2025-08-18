@@ -10,6 +10,9 @@
 #include "myprocess.h"
 #include "calcuthread.h"
 #include <QCloseEvent>
+#include <QSettings>
+
+#define CONFIG_INI "../settings/config.ini"
 
 
 QT_BEGIN_NAMESPACE
@@ -39,6 +42,13 @@ private slots:
     void update_image(QImage image);
     void sl_dispImg(QImage imgOrg, QImage imgDest);
 
+    void on_btnOpenFiles_clicked();
+    void currentSelectFileNameChanged();
+    void on_btnStartProcess_clicked();
+    void on_btnStartProcessMultiThread_clicked();
+    void on_btnStop_clicked();
+    void setNumberOfCompositionImg(int n);
+
 private:
     Ui::MainWindow *ui;
 
@@ -62,13 +72,9 @@ private:
     CalcuThread calThread;
 
 
-private slots:
-    void on_btnOpenFiles_clicked();
-    void currentSelectFileNameChanged();
-    void on_btnStartProcess_clicked();
-    void on_btnStartProcessMultiThread_clicked();
-    void on_btnStop_clicked();
-    void setNumberOfCompositionImg(int n);
+    void setImagePathDir();
+    void getImagePathDir();
+
 
 protected:
     void closeEvent(QCloseEvent* event)override;
